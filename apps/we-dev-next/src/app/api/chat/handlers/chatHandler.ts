@@ -14,6 +14,11 @@ export async function handleChatMode(
     model: string,
     userId: string | null,
     tools?: ToolInfo[],
+    userConfig?: {
+        apiKey?: string;
+        apiUrl?: string;
+        provider?: string;
+    }
 ): Promise<Response> {
     const stream = new SwitchableStream()
     let toolList = {};
@@ -59,7 +64,7 @@ export async function handleChatMode(
 
     }
 
-    const result = await streamTextFn(messages, options, model)
+    const result = await streamTextFn(messages, options, model, userConfig)
     return result.toDataStreamResponse({
         sendReasoning: true,
     })

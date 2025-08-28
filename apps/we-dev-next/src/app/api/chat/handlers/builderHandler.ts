@@ -16,6 +16,11 @@ export async function handleBuilderMode(
     userId: string | null,
     otherConfig: promptExtra,
     tools?: ToolInfo[],
+    userConfig?: {
+        apiKey?: string;
+        apiUrl?: string;
+        provider?: string;
+    }
 ): Promise<Response> {
      const historyMessages = JSON.parse(JSON.stringify(messages));
   // Directory tree search
@@ -57,7 +62,7 @@ export async function handleBuilderMode(
     messages[messages.length - 1].content = buildSystemPrompt(type, otherConfig) + 'Note the requirements above, when writing code, do not give me markdown, output must be XML!! Emphasis!; My question is: ' + messages[messages.length - 1].content
   }
   try {
-    return await streamResponse(messages, model, userId, tools);
+    return await streamResponse(messages, model, userId, tools, userConfig);
   } catch (err) {
     throw err
   }

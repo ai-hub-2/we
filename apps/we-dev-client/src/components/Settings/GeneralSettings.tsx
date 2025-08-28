@@ -255,11 +255,55 @@ export function GeneralSettings() {
     "replicate": "https://replicate.com/docs/reference/http",
   };
 
+  const getApiBaseUrl = (provider: string) => {
+    switch (provider) {
+      case "openai":
+        return "https://api.openai.com";
+      case "anthropic":
+        return "https://api.anthropic.com";
+      case "google":
+        return "https://generativelanguage.googleapis.com";
+      case "groq":
+        return "https://console.groq.com";
+      case "deepseek":
+        return "https://api.deepseek.com";
+      case "azure-openai":
+        return "https://api.openai.com"; // Azure OpenAI uses OpenAI API base
+      case "mistral":
+        return "https://api.mistral.ai";
+      case "cohere":
+        return "https://api.cohere.com";
+      case "perplexity":
+        return "https://api.perplexity.ai";
+      case "together":
+        return "https://api.together.ai";
+      case "huggingface":
+        return "https://api.huggingface.co";
+      case "fireworks":
+        return "https://api.fireworks.ai";
+      case "openrouter":
+        return "https://openrouter.ai";
+      case "xai":
+        return "https://api.x.ai";
+      case "deepinfra":
+        return "https://api.deepinfra.com";
+      case "replicate":
+        return "https://api.replicate.com";
+      default:
+        return "";
+    }
+  };
+
   const handleProviderChange = async (newProvider: any) => {
     setProvider(newProvider);
     try {
       const key = apiKeys[newProvider as keyof typeof apiKeys] || "";
-      const models = await fetchModelsForProvider(newProvider, key);
+      const userConfig = {
+        apiKey: key,
+        apiUrl: getApiBaseUrl(newProvider),
+        provider: newProvider,
+      };
+      const models = await fetchModelsForProvider(newProvider, key, userConfig);
       setAvailableModels(models);
       setSelectedModel(models[0]);
       const needsKey = ["openai", "anthropic", "google", "groq", "azure-openai"].includes(newProvider);
@@ -286,7 +330,12 @@ export function GeneralSettings() {
     }
     setApiKey(detected as any, key);
     try {
-      const models = await fetchModelsForProvider(detected as any, key);
+      const userConfig = {
+        apiKey: key,
+        apiUrl: getApiBaseUrl(detected),
+        provider: detected,
+      };
+      const models = await fetchModelsForProvider(detected as any, key, userConfig);
       setAvailableModels(models);
       if (!models.includes(selectedModel || "")) setSelectedModel(models[0]);
       if (!models || models.length === 0) {

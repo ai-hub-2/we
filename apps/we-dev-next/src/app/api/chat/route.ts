@@ -17,6 +17,11 @@ interface ChatRequest {
     mode: ChatMode;
     otherConfig: promptExtra
     tools?: ToolInfo[]
+    userConfig?: {
+        apiKey?: string;
+        apiUrl?: string;
+        provider?: string;
+    }
 }
 
 export async function POST(request: Request) {
@@ -27,12 +32,13 @@ export async function POST(request: Request) {
             mode = ChatMode.Builder,
             otherConfig,
             tools,
+            userConfig,
         } = (await request.json()) as ChatRequest;
         const userId = request.headers.get("userId");
         const result =
             mode === ChatMode.Chat
-                ? await handleChatMode(messages, model, userId, tools)
-                : await handleBuilderMode(messages, model, userId, otherConfig, tools)
+                ? await handleChatMode(messages, model, userId, tools, userConfig)
+                : await handleBuilderMode(messages, model, userId, otherConfig, tools, userConfig)
         console.log(result, 'result');
         return result
     } catch (error) {

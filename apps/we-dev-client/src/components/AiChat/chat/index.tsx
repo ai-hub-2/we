@@ -148,20 +148,30 @@ export const BaseChat = ({uuid: propUuid}: { uuid?: string }) => {
 
     // 使用 ollama 模型 获取模型列表
     useEffect(() => {
-        fetch(`${API_BASE}/api/model`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-        })
-            .then((res) => res.json())
-            .then((data) => {
+        const fetchModels = async () => {
+            try {
+                const response = await fetch(`${API_BASE}/api/model`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        provider: provider,
+                        apiKey: apiKeys[provider],
+                        apiUrl: getApiBaseUrl(provider),
+                    }),
+                });
+                const data = await response.json();
                 setModelOptions(data);
-            })
-            .catch((error) => {
+            } catch (error) {
                 console.error("Failed to fetch model list:", error);
-            });
-    }, []);
+            }
+        };
+        
+        if (provider && apiKeys[provider]) {
+            fetchModels();
+        }
+    }, [provider, apiKeys, API_BASE]);
 
     useEffect(() => {
         if (
@@ -333,7 +343,46 @@ export const BaseChat = ({uuid: propUuid}: { uuid?: string }) => {
         }
     }, [enabledMCPs])
 
-    const { provider, selectedModel } = useAIProviderStore();
+    const { provider, selectedModel, apiKeys } = useAIProviderStore();
+    
+    // Helper function to get API base URL for provider
+    const getApiBaseUrl = (provider: string) => {
+        switch (provider) {
+            case 'openai':
+                return 'https://api.openai.com/v1';
+            case 'openrouter':
+                return 'https://openrouter.ai/api/v1';
+            case 'anthropic':
+                return 'https://api.anthropic.com/v1';
+            case 'google':
+                return 'https://generativelanguage.googleapis.com/v1beta';
+            case 'groq':
+                return 'https://api.groq.com/openai/v1';
+            case 'deepseek':
+                return 'https://api.deepseek.com/v1';
+            case 'mistral':
+                return 'https://api.mistral.ai/v1';
+            case 'cohere':
+                return 'https://api.cohere.ai/v1';
+            case 'perplexity':
+                return 'https://api.perplexity.ai';
+            case 'together':
+                return 'https://api.together.xyz/v1';
+            case 'huggingface':
+                return 'https://huggingface.co/api';
+            case 'fireworks':
+                return 'https://api.fireworks.ai/inference/v1';
+            case 'xai':
+                return 'https://api.x.ai/v1';
+            case 'deepinfra':
+                return 'https://api.deepinfra.com/v1/openai';
+            case 'replicate':
+                return 'https://api.replicate.com/v1';
+            default:
+                return 'https://api.openai.com/v1';
+        }
+    };
+
     useEffect(() => {
         if (selectedModel) {
             setBaseModal((prev) => ({
@@ -371,6 +420,12 @@ export const BaseChat = ({uuid: propUuid}: { uuid?: string }) => {
                     isBackEnd: otherConfig.isBackEnd,
                     backendLanguage: otherConfig.backendLanguage
                 },
+            },
+            // Send user's API configuration
+            userConfig: {
+                apiKey: apiKeys[provider],
+                apiUrl: getApiBaseUrl(provider),
+                provider: provider,
             },
             // 如果模型支持 function call 且有启用的 MCP 工具，则添加 tools 配置
             ...(baseModal.functionCall && mcpTools.length > 0 && {

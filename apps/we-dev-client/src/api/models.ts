@@ -2,11 +2,11 @@ import { AIProvider } from "@/stores/aiProviderSlice";
 
 type Fetcher = (apiKey: string) => Promise<string[]>;
 
-async function viaCF(provider: string, apiKey: string, baseUrl?: string): Promise<string[]> {
+async function viaCF(provider: string, apiKey: string, baseUrl?: string, userConfig?: any): Promise<string[]> {
   const resp = await fetch(`/api/models/${provider}`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ apiKey, baseUrl }),
+    body: JSON.stringify({ apiKey, baseUrl, userConfig }),
   });
   if (!resp.ok) return [];
   const data = await resp.json();
@@ -111,10 +111,15 @@ const fetchers: Record<AIProvider, Fetcher> = {
 
 export async function fetchModelsForProvider(
   provider: AIProvider,
-  apiKey?: string
+  apiKey?: string,
+  userConfig?: any
 ): Promise<string[]> {
   const key = apiKey || "";
   try {
+    // For Cloudflare Functions, pass userConfig to viaCF
+    if (provider !== 'ollama' && provider !== 'azure-openai') {
+      return await viaCF(provider, key, undefined, userConfig);
+    }
     return await fetchers[provider](key);
   } catch {
     return [];

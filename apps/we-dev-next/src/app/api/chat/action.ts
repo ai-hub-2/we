@@ -70,11 +70,22 @@ export function streamTextFn(
   messages: Messages,
   options?: StreamingOptions,
   modelKey?: string,
+  userConfig?: {
+    apiKey?: string;
+    apiUrl?: string;
+    provider?: string;
+  }
 ) {
-  const {
-    apiKey = process.env.THIRD_API_KEY,
-    apiUrl = process.env.THIRD_API_URL,
-  } = modelConfig.find((item) => item.modelKey === modelKey);
+  // Use user config if provided, otherwise fall back to environment variables
+  const config = modelConfig.find((item) => item.modelKey === modelKey);
+  const apiKey = userConfig?.apiKey || process.env.THIRD_API_KEY;
+  const apiUrl = userConfig?.apiUrl || process.env.THIRD_API_URL;
+  const provider = userConfig?.provider || config?.provider;
+  
+  if (!apiKey || !apiUrl) {
+    throw new Error('API key and URL are required');
+  }
+  
   const model = getOpenAIModel(
     apiUrl,
     apiKey,

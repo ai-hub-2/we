@@ -3,19 +3,29 @@ export const onRequest: PagesFunction = async (context) => {
   const provider = params.provider as string;
 
   try {
-    const { apiKey, baseUrl } = await request.json();
-    const upstream = getUpstream(provider, baseUrl);
+    const { apiKey, baseUrl, userConfig } = await request.json();
+    
+    // Use user config if provided, otherwise use passed parameters
+    const finalApiKey = userConfig?.apiKey || apiKey;
+    const finalBaseUrl = userConfig?.apiUrl || baseUrl;
+    const finalProvider = userConfig?.provider || provider;
+    
+    if (!finalApiKey) {
+      return new Response(JSON.stringify({ error: "API key is required" }), { status: 400, headers: corsHeaders() });
+    }
+    
+    const upstream = getUpstream(finalProvider, finalBaseUrl);
     if (!upstream) {
       return new Response(JSON.stringify({ error: "Unsupported provider" }), { status: 400, headers: corsHeaders() });
     }
 
-    const { url, headers } = upstream(apiKey);
+    const { url, headers } = upstream(finalApiKey);
     const resp = await fetch(url, { headers });
     if (!resp.ok) {
       return new Response(JSON.stringify({ data: [] }), { status: 200, headers: corsHeaders() });
     }
     const data = await resp.json();
-    const list = normalizeModels(provider, data);
+    const list = normalizeModels(finalProvider, data);
     return new Response(JSON.stringify({ data: list }), { status: 200, headers: corsHeaders() });
   } catch (e) {
     return new Response(JSON.stringify({ data: [] }), { status: 200, headers: corsHeaders() });

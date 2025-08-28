@@ -12,7 +12,12 @@ export async function streamResponse(
     messages: Messages,
     model: string,
     userId: string | null,
-    tools?: ToolInfo[]
+    tools?: ToolInfo[],
+    userConfig?: {
+        apiKey?: string;
+        apiUrl?: string;
+        provider?: string;
+    }
 ): Promise<Response> {
     let toolList = {};
     if (tools && tools.length > 0) {
@@ -62,7 +67,7 @@ export async function streamResponse(
     };
 
     try {
-        const result = streamTextFn(messages, options, model);
+        const result = streamTextFn(messages, options, model, userConfig);
         return result.toDataStreamResponse({
             sendReasoning: true,
         });
