@@ -70,7 +70,7 @@ export class ProxyManager {
     private async setSystemProxy(): Promise<void> {
         try {
             await this.setSessionsProxy({mode: 'system'})
-            const proxyString = await session.defaultSession.resolveProxy('https://dummy.com')
+            const proxyString = await session.defaultSession.resolveProxy('https://api.openai.com')
             const [protocol, address] = proxyString.split(';')[0].split(' ')
             const url = protocol === 'PROXY' ? `http://${address}` : null
             if (url && url !== this.config.url) {
