@@ -64,6 +64,7 @@ export default defineConfig(async ({ mode }) => {
                   maxEntries: 50,
                   maxAgeSeconds: 60 * 60 * 24, // 24 hours
                 },
+                networkTimeoutSeconds: 10,
               },
             },
             {
@@ -75,20 +76,37 @@ export default defineConfig(async ({ mode }) => {
                   maxEntries: 50,
                   maxAgeSeconds: 60 * 60 * 24, // 24 hours
                 },
+                networkTimeoutSeconds: 10,
+              },
+            },
+            {
+              urlPattern: /^https:\/\/api\.anthropic\.com\/.*/i,
+              handler: 'NetworkFirst',
+              options: {
+                cacheName: 'anthropic-api-cache',
+                expiration: {
+                  maxEntries: 50,
+                  maxAgeSeconds: 60 * 60 * 24, // 24 hours
+                },
+                networkTimeoutSeconds: 10,
               },
             },
           ],
+          skipWaiting: true,
+          clientsClaim: true,
         },
         manifest: {
           name: 'We Dev - AI Code Generator',
           short_name: 'We Dev',
-          description: 'AI-powered code generation and development tool',
+          description: 'AI-powered code generation and development tool with real-time collaboration',
           theme_color: '#7c3aed',
           background_color: '#ffffff',
           display: 'standalone',
           orientation: 'portrait',
           scope: '/',
           start_url: '/',
+          categories: ['productivity', 'development', 'utilities'],
+          lang: 'en',
           icons: [
             {
               src: '/icon-192x192.svg',
@@ -139,15 +157,23 @@ export default defineConfig(async ({ mode }) => {
       rollupOptions: {
         external: ["@electron/remote", "electron"],
         output: {
-          manualChunks(id) {
-            if (id.includes("workspace/")) {
-              return null;
-            }
+          manualChunks: {
+            vendor: ['react', 'react-dom'],
+            ui: ['antd', 'lucide-react'],
+            utils: ['lodash', 'uuid', 'clsx'],
           },
         },
       },
       copyPublicDir: true, 
       assetsDir: "assets",
+      chunkSizeWarningLimit: 1000,
+      minify: 'terser',
+      terserOptions: {
+        compress: {
+          drop_console: true,
+          drop_debugger: true,
+        },
+      },
     },
 
     server: {
