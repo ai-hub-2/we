@@ -45,6 +45,7 @@ export async function POST(request: Request) {
         return NextResponse.json(config);
     } catch (error) {
         console.error('Error in model endpoint:', error);
-        return NextResponse.json({ error: 'Failed to fetch models' }, { status: 500 });
+        // Return empty array instead of error to prevent UI issues
+        return NextResponse.json([]);
     }
 }

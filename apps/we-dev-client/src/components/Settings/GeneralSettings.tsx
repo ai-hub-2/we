@@ -258,39 +258,39 @@ export function GeneralSettings() {
   const getApiBaseUrl = (provider: string) => {
     switch (provider) {
       case "openai":
-        return "https://api.openai.com";
+        return "https://api.openai.com/v1";
       case "anthropic":
-        return "https://api.anthropic.com";
+        return "https://api.anthropic.com/v1";
       case "google":
-        return "https://generativelanguage.googleapis.com";
+        return "https://generativelanguage.googleapis.com/v1beta";
       case "groq":
-        return "https://console.groq.com";
+        return "https://api.groq.com/openai/v1";
       case "deepseek":
-        return "https://api.deepseek.com";
+        return "https://api.deepseek.com/v1";
       case "azure-openai":
-        return "https://api.openai.com"; // Azure OpenAI uses OpenAI API base
+        return "https://api.openai.com/v1"; // Azure OpenAI uses OpenAI API base
       case "mistral":
-        return "https://api.mistral.ai";
+        return "https://api.mistral.ai/v1";
       case "cohere":
-        return "https://api.cohere.com";
+        return "https://api.cohere.ai/v1";
       case "perplexity":
         return "https://api.perplexity.ai";
       case "together":
-        return "https://api.together.ai";
+        return "https://api.together.xyz/v1";
       case "huggingface":
-        return "https://api.huggingface.co";
+        return "https://huggingface.co/api";
       case "fireworks":
-        return "https://api.fireworks.ai";
+        return "https://api.fireworks.ai/inference/v1";
       case "openrouter":
-        return "https://openrouter.ai";
+        return "https://openrouter.ai/api/v1";
       case "xai":
-        return "https://api.x.ai";
+        return "https://api.x.ai/v1";
       case "deepinfra":
-        return "https://api.deepinfra.com";
+        return "https://api.deepinfra.com/v1/openai";
       case "replicate":
-        return "https://api.replicate.com";
+        return "https://api.replicate.com/v1";
       default:
-        return "";
+        return "https://api.openai.com/v1";
     }
   };
 
@@ -306,13 +306,14 @@ export function GeneralSettings() {
       const models = await fetchModelsForProvider(newProvider, key, userConfig);
       setAvailableModels(models);
       setSelectedModel(models[0]);
-      const needsKey = ["openai", "anthropic", "google", "groq", "azure-openai"].includes(newProvider);
+      const needsKey = ["openai", "anthropic", "google", "groq", "azure-openai", "openrouter", "deepseek", "mistral", "cohere", "perplexity", "together", "huggingface", "fireworks", "xai", "deepinfra", "replicate"].includes(newProvider);
       if (needsKey && !key) {
         message.warning("Please set API key for the selected provider.");
       } else if (needsKey && (!models || models.length === 0)) {
         message.error("Failed to load models. Check API key/permissions.");
       }
     } catch (e) {
+      console.error("Error loading models for provider:", e);
       message.error("Error loading models for provider.");
       setAvailableModels([]);
       setSelectedModel(undefined);
@@ -341,7 +342,8 @@ export function GeneralSettings() {
       if (!models || models.length === 0) {
         message.warning("No models returned. Verify API key/plan.");
       }
-    } catch {
+    } catch (error) {
+      console.error("Failed to fetch models:", error);
       message.error("Failed to fetch models. Check API key.");
       setAvailableModels([]);
       setSelectedModel(undefined);

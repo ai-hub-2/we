@@ -17,6 +17,11 @@ export function getOpenAIModel(baseURL: string, apiKey: string, model: string) {
   const provider = modelConfig.find(
     (item) => item.modelKey === model
   )?.provider;
+  
+  if (!provider) {
+    throw new Error(`Unknown model: ${model}`);
+  }
+  
   if (provider === "deepseek") {
     const deepseek = createDeepSeek({
       apiKey,
@@ -83,7 +88,11 @@ export function streamTextFn(
   const provider = userConfig?.provider || config?.provider;
   
   if (!apiKey || !apiUrl) {
-    throw new Error('API key and URL are required');
+    throw new Error('API key and URL are required. Please check your settings.');
+  }
+  
+  if (!modelKey) {
+    throw new Error('Model key is required.');
   }
   
   const model = getOpenAIModel(

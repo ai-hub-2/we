@@ -150,6 +150,12 @@ export const BaseChat = ({uuid: propUuid}: { uuid?: string }) => {
     useEffect(() => {
         const fetchModels = async () => {
             try {
+                // Skip if no provider or API key
+                if (!provider || !apiKeys[provider]) {
+                    console.log("No provider or API key available, skipping model fetch");
+                    return;
+                }
+
                 const response = await fetch(`${API_BASE}/api/model`, {
                     method: "POST",
                     headers: {
@@ -161,16 +167,29 @@ export const BaseChat = ({uuid: propUuid}: { uuid?: string }) => {
                         apiUrl: getApiBaseUrl(provider),
                     }),
                 });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
                 const data = await response.json();
-                setModelOptions(data);
+                
+                if (Array.isArray(data)) {
+                    setModelOptions(data);
+                } else if (data && Array.isArray(data.data)) {
+                    setModelOptions(data.data);
+                } else {
+                    console.warn("Unexpected model data format:", data);
+                    setModelOptions([]);
+                }
             } catch (error) {
                 console.error("Failed to fetch model list:", error);
+                // Set empty array on error to prevent UI issues
+                setModelOptions([]);
             }
         };
         
-        if (provider && apiKeys[provider]) {
-            fetchModels();
-        }
+        fetchModels();
     }, [provider, apiKeys, API_BASE]);
 
     useEffect(() => {
